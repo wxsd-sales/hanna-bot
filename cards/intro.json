@@ -1,0 +1,80 @@
+{
+    "type": "AdaptiveCard",
+    "body": [
+        {
+            "type": "ColumnSet",
+            "columns": [
+                {
+                    "type": "Column",
+                    "items": [
+                        {
+                            "type": "Image",
+                            "style": "Person",
+                            "url": "https://avatars.slack-edge.com/2021-06-24/2233642559168_0ece5626019f23253940_512.png",
+                            "size": "Medium",
+                            "height": "50px"
+                        }
+                    ],
+                    "width": "auto"
+                },
+                {
+                    "type": "Column",
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": "World Wide Sales - Center of Excellence",
+                            "weight": "Lighter"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "weight": "Bolder",
+                            "text": "Engagement Request",
+                            "wrap": true,
+                            "size": "Large",
+                            "spacing": "Small"
+                        }
+                    ],
+                    "width": "stretch"
+                }
+            ]
+        },
+        {
+            "type": "TextBlock",
+            "wrap": true,
+            "text": "If you wish to engage subject matter experts from the Center of Excellence, please click the **Request Form** button below, or type: **support**"
+        },
+        {
+            "type": "ActionSet",
+            "actions": [
+                {
+                    "type": "Action.Submit",
+                    "title": "Request Form",
+                    "id": "request_form",
+                    "data": {
+                        "submit": "intro"
+                    }
+                }
+            ],
+            "spacing": "Small"
+        },
+        {
+            "type": "TextBlock",
+            "wrap": true,
+            "spacing": "Medium",
+            "text": "You can also view the Dev Team's completed work below.  You will need to click the Tools-> Webex Labs dropdown if you are not already authenticated."
+        },
+        {
+            "type": "ActionSet",
+            "actions": [
+                {
+                    "type": "Action.OpenUrl",
+                    "title": "Webex Labs Portal",
+                    "url": "https://gcse.cisco.com/webex-labs"
+                }
+            ],
+            "spacing": "Small"
+        }
+    ],
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "version": "1.2"
+}

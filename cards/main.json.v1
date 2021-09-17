@@ -1,0 +1,232 @@
+{
+    "type": "AdaptiveCard",
+    "body": [
+        {
+            "type": "ColumnSet",
+            "columns": [
+                {
+                    "type": "Column",
+                    "items": [
+                        {
+                            "type": "Image",
+                            "style": "Person",
+                            "url": "https://avatars.slack-edge.com/2021-06-24/2233642559168_0ece5626019f23253940_512.png",
+                            "size": "Medium",
+                            "height": "50px"
+                        }
+                    ],
+                    "width": "auto"
+                },
+                {
+                    "type": "Column",
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": "World Wide Sales - Center of Excellence",
+                            "weight": "Lighter"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "weight": "Bolder",
+                            "text": "Engagement Request",
+                            "wrap": true,
+                            "size": "Large",
+                            "spacing": "Small"
+                        }
+                    ],
+                    "width": "stretch"
+                }
+            ]
+        },
+        {
+            "type": "Input.Text",
+            "placeholder": "Enter customer name",
+            "id": "customer_name"
+        },
+        {
+            "type": "TextBlock",
+            "text": "What is your geography?",
+            "wrap": true
+        },
+        {
+            "type": "Input.ChoiceSet",
+            "choices": [
+                {
+                    "title": "Americas",
+                    "value": "Americas"
+                },
+                {
+                    "title": "EMEAR",
+                    "value": "EMEAR"
+                },
+                {
+                    "title": "APJC",
+                    "value": "APJC"
+                },
+                {
+                    "title": "Global",
+                    "value": "Global"
+                }
+            ],
+            "spacing": "Small",
+            "value": "Americas",
+            "id": "geography"
+        },
+        {
+            "type": "Input.ChoiceSet",
+            "choices": [
+                {
+                    "title": "AMERICAS_MISC",
+                    "value": "AMERICAS_MISC"
+                },
+                {
+                    "title": "AMERICAS_SP",
+                    "value": "AMERICAS_SP"
+                },
+                {
+                    "title": "CANADA",
+                    "value": "CANADA"
+                },
+                {
+                    "title": "GLOBAL ENTERPRISE SEGMENT",
+                    "value": "GLOBAL ENTERPRISE SEGMENT"
+                },
+                {
+                    "title": "GSP_AMERICAS",
+                    "value": "GSP_AMERICAS"
+                },
+                {
+                    "title": "LATIN AMERICA",
+                    "value": "LATIN AMERICA"
+                },
+                {
+                    "title": "US COMMERCIAL",
+                    "value": "US COMMERCIAL"
+                },
+                {
+                    "title": "US OTHER",
+                    "value": "US OTHER"
+                },
+                {
+                    "title": "US PS Market Segment",
+                    "value": "US PS Market Segment"
+                },
+                {
+                    "title": "EMEAR_EE",
+                    "value": "EMEAR_EE"
+                },
+                {
+                    "title": "EMEAR_FRANCE",
+                    "value": "EMEAR_FRANCE"
+                },
+                {
+                    "title": "EMEAR_GERMANY",
+                    "value": "EMEAR_GERMANY"
+                },
+                {
+                    "title": "EMEAR_MEA",
+                    "value": "EMEAR_MEA"
+                },
+                {
+                    "title": "EMEAR_RCIS",
+                    "value": "EMEAR_RCIS"
+                },
+                {
+                    "title": "EMEAR_SP",
+                    "value": "EMEAR_SP"
+                },
+                {
+                    "title": "EMEAR_SWITZERLAND",
+                    "value": "EMEAR_SWITZERLAND"
+                },
+                {
+                    "title": "EMEAR-CENTRAL",
+                    "value": "EMEAR-CENTRAL"
+                },
+                {
+                    "title": "EMEAR-GSP",
+                    "value": "EMEAR-GSP"
+                },
+                {
+                    "title": "EMEAR-NORTH",
+                    "value": "EMEAR-NORTH"
+                },
+                {
+                    "title": "EMEAR-SOUTH",
+                    "value": "EMEAR-SOUTH"
+                },
+                {
+                    "title": "EMEAR-UKI",
+                    "value": "EMEAR-UKI"
+                },
+                {
+                    "title": "ANZ AREA",
+                    "value": "ANZ AREA"
+                },
+                {
+                    "title": "APJ_SP",
+                    "value": "APJ_SP"
+                },
+                {
+                    "title": "ASEAN_AREA",
+                    "value": "ASEAN_AREA"
+                },
+                {
+                    "title": "GREATER_CHINA",
+                    "value": "GREATER_CHINA"
+                },
+                {
+                    "title": "GSP APJ",
+                    "value": "GSP APJ"
+                },
+                {
+                    "title": "INDIA_AREA",
+                    "value": "INDIA_AREA"
+                },
+                {
+                    "title": "JAPAN",
+                    "value": "JAPAN"
+                },
+                {
+                    "title": "ROK_AREA",
+                    "value": "ROK_AREA"
+                }
+            ],
+            "spacing": "Small",
+            "value": "AMERICAS_MISC",
+            "id": "sales_level_2"
+        },
+        {
+            "type": "Input.Text",
+            "placeholder": "Sales Level 3",
+            "spacing": "Small",
+            "id": "sales_level_3"
+        },
+        {
+            "type": "TextBlock",
+            "text": "What type of engagement are you requiring?",
+            "wrap": true
+        },
+        {
+            "type": "Input.ChoiceSet",
+            "placeholder": "--select--",
+            "spacing": "None",
+            "id": "engagement_type"
+        },
+        {
+            "type": "ActionSet",
+            "actions": [
+                {
+                    "type": "Action.Submit",
+                    "title": "Submit",
+                    "id": "submit",
+                    "data": {
+                        "submit": "main"
+                    }
+                }
+            ]
+        }
+    ],
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "version": "1.2"
+}

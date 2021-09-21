@@ -1,11 +1,7 @@
-
 require('dotenv').config();
 const {MongoClient} = require('mongodb');
 var webex = require('webex/env');
 let mainCard = require('./cards/main.json');
-let introCard = require('./cards/intro.json');
-const express = require("express");
-const app = express();
 
 const mongoUri =`${process.env.MONGO_URI}/${process.env.MONGO_DB}?retryWrites=true&w=majority`
 const mongoClient = new MongoClient(mongoUri);
@@ -71,7 +67,8 @@ function sendIntroSpaceMessage(roomId, actorId, inputs, links){
   msg += `>**Customer Name**: ${inputs.customer_name}  \n`;
   msg += `>**Geography**: ${inputs.geography}  \n`;
   msg += `>**Sales Level 2**: ${inputs.sales_level_2}  \n`;
-  msg += `>**Sales Level 3**: ${inputs.sales_level_3}\n\n`;
+  msg += `>**Sales Level 3**: ${inputs.sales_level_3}  \n`;
+  msg += `>**Additional Comments**: ${inputs.comments}\n\n`;
   msg += 'An expert will follow up with you in this space as soon as possible. In the mean time, here are a few helpful links:  \n';
   for(let link of links){
     console.log(link);
@@ -131,9 +128,7 @@ function eventListener(){
           console.log('message created event:');
           console.log(message);
           let roomId = message.data.roomId;
-          //if(message.data.text.toLowerCase() == "support"){}
           sendMainCard(roomId);
-          //sendWebexMessage(roomId, "Engagement Request Hello - Adaptive Card", introCard);
         }//else, we do nothing when we see the bot's own message
       });
     })
@@ -171,7 +166,3 @@ function eventListener(){
 
 botSetup();
 eventListener();
-
-const listener = app.listen(process.env.PORT, function() {
-  console.log("Your app is listening on port " + listener.address().port);
-});

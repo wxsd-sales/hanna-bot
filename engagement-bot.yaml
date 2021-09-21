@@ -1,3 +1,10 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: engagement-bot
+  labels:
+    name: engagement-bot
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -16,7 +23,7 @@ spec:
       containers:
       - image: 191518685251.dkr.ecr.us-west-1.amazonaws.com/engagement-bot:latest
         imagePullPolicy: Always
-        name: wxsd-guest-demo
+        name: engagement-bot
         ports:
         - containerPort: 10031
 ---

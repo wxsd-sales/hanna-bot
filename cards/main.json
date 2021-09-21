@@ -228,6 +228,18 @@
             "id": "engagement_type"
         },
         {
+            "type": "TextBlock",
+            "text": "Additional Comments:",
+            "wrap": true
+        },
+        {
+            "type": "Input.Text",
+            "placeholder": "Briefly describe what help you need.",
+            "isMultiline": true,
+            "spacing": "None",
+            "id": "comments"
+        },
+        {
             "type": "ActionSet",
             "actions": [
                 {

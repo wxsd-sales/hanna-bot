@@ -32,3 +32,7 @@ npm start
 
 ### Deploy to Prod
 To deploy this in production, please use the build/push commands commented in the Dockerfile.
+
+### Smartsheet API
+The Smartsheet API and JS SDK can be found here:
+https://smartsheet-platform.github.io/api-docs/?javascript#add-rows 

@@ -1,5 +1,6 @@
 require('dotenv').config();
 const {MongoClient} = require('mongodb');
+var smartsheetClient = require('smartsheet');
 var webex = require('webex/env');
 let mainCard = require('./cards/main.json');
 
@@ -7,7 +8,12 @@ const mongoUri =`${process.env.MONGO_URI}/${process.env.MONGO_DB}?retryWrites=tr
 const mongoClient = new MongoClient(mongoUri);
 const mongoDB = process.env.MONGO_DB;
 const typeCol = "type";
-mongoClient.connect(err => { console.log('mongo connection established.') });
+mongoClient.connect(err => {
+  console.log('mongo connection established.')
+ });
+
+var ss = smartsheetClient.createClient({ logLevel: 'info' });
+
 
 var botId;
 
@@ -19,6 +25,41 @@ function botSetup(){
   }).catch(function(reason) {
       console.error(reason);
       process.exit(1);
+  });
+}
+
+function addSmartsheetRow(sheetInfo, inputs, personEmail){
+  var row = {
+      "toBottom": true,
+      "cells": []
+    }
+
+  var options = {
+    sheetId: sheetInfo.sheet_id,
+    body: row
+  };
+  console.log(sheetInfo);
+  for(let key of Object.keys(sheetInfo.columns)){
+    console.log(key);
+    let value = inputs[key];
+    if(key == "status"){
+      value = "New";
+    } else if(key == "date_submitted"){
+      value = new Date().toISOString();
+    } else if(key == "submitted_by"){
+      value = personEmail;
+    }
+    let col = {"columnId":sheetInfo.columns[key], "value":value}
+    row.cells.push(col);
+  }
+  row = [row];
+  console.log(JSON.stringify(row));
+  ss.sheets.addRows(options)
+  .then(function(newRows) {
+    console.log(newRows);
+  })
+  .catch(function(error) {
+    console.log(error);
   });
 }
 
@@ -77,10 +118,10 @@ function sendIntroSpaceMessage(roomId, actorId, inputs, links){
   sendWebexMessage(roomId, msg);
 }
 
+
 async function formSubmitted(actorId, inputs){
   console.log('formSubmitted');
   console.log(inputs);
-  //let doc = await mongoClient.db(mongoDB).collection(typeCol).findOne({"type":inputs.engagement_type});
   let cursor = await mongoClient.db(mongoDB).collection(typeCol).aggregate([
                 {$match : {type:inputs.engagement_type} },
                 {$lookup :
@@ -88,6 +129,12 @@ async function formSubmitted(actorId, inputs){
                            localField : "links",
                            foreignField:"_id" ,
                            as :"links"}
+                },
+                {$lookup :
+                          {from :"sheets" ,
+                           localField : "sheet",
+                           foreignField:"_id" ,
+                           as :"sheet"}
                 }
               ]);
   let doc;
@@ -107,17 +154,25 @@ async function formSubmitted(actorId, inputs){
           console.log(pers);
           createWebexMembership({"roomId":room.id, "personEmail":pers});
         }
-        createWebexMembership({"roomId":room.id, "personId":actorId}).then(() => {
+        createWebexMembership({"roomId":room.id, "personId":actorId}).then((membership) => {
           sendIntroSpaceMessage(room.id, actorId, inputs, doc.links);
+          if([null, undefined].indexOf(doc.sheet) < 0 && doc.sheet.length > 0){
+            addSmartsheetRow(doc.sheet[0], inputs, membership.personEmail);
+          }
         });
       }).catch(function(error){
-        console.log(`formSubmitted Error: failed to create room: ${error}`);
+        let msg = `formSubmitted Error: failed to create room: ${error}`;
+        console.log(msg);
+        sendWebexMessage(process.env.ERROR_ROOM_ID, msg);
       });
   } else {
-    console.log("formSubmitted Error: mongo aggregate couldn't find an item for that type");
+    let msg = "formSubmitted Error: mongo aggregate couldn't find an item for that type"
+    console.log(msg);
+    sendWebexMessage(process.env.ERROR_ROOM_ID, msg);
   }
 }
 
+var CISCO_ONLY = "Thank you for reaching out. This bot can only be used by cisco.com accounts. Please work with your Cisco account team to engage the Center of Excellence team as needed.";
 function eventListener(){
   console.log('connected');
   webex.messages.listen()
@@ -128,7 +183,12 @@ function eventListener(){
           console.log('message created event:');
           console.log(message);
           let roomId = message.data.roomId;
-          sendMainCard(roomId);
+          let personEmail = message.data.personEmail;
+          if(!personEmail.endsWith('@cisco.com')){
+            sendWebexMessage(roomId, CISCO_ONLY);
+          } else {
+            sendMainCard(roomId);
+          }
         }//else, we do nothing when we see the bot's own message
       });
     })
@@ -145,18 +205,24 @@ function eventListener(){
         let messageId = attachmentAction.data.messageId;
         let roomId = attachmentAction.data.roomId;
         let inputs = attachmentAction.data.inputs;
-        if(inputs.submit == 'main'){
-          if(inputs.customer_name != ''){
-            formSubmitted(attachmentAction.actorId, inputs);
+        webex.people.get(attachmentAction.actorId).then((person) => {
+          console.log(person);
+          let personEmail = person.emails[0];
+          if(!personEmail.endsWith('@cisco.com')){
+            sendWebexMessage(roomId, CISCO_ONLY);
+          } else if(inputs.submit == 'main'){
+            if(inputs.customer_name != ''){
+              formSubmitted(attachmentAction.actorId, inputs);
+              webex.messages.remove(messageId);
+              sendWebexMessage(roomId, "Thank you for your submission. A new space to discuss your request is being created now.");
+            } else {
+              sendWebexMessage(roomId, "Please enter a customer name and resubmit to continue.");
+            }
+          } else if(inputs.submit == 'intro'){
             webex.messages.remove(messageId);
-            sendWebexMessage(roomId, "Thank you for your submission. A new space to discuss your request is being created now.");
-          } else {
-            sendWebexMessage(roomId, "Please enter a customer name and resubmit to continue.");
+            sendMainCard(roomId);
           }
-        } else if(inputs.submit == 'intro'){
-          webex.messages.remove(messageId);
-          sendMainCard(roomId);
-        }
+        });
       });
     })
     .catch((err) => {

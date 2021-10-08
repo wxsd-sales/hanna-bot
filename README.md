@@ -30,4 +30,5 @@ npm install
 npm start
 ```
 
+### Deploy to Prod
 To deploy this in production, please use the build/push commands commented in the Dockerfile.

@@ -2,12 +2,12 @@ require('dotenv').config();
 const {MongoClient} = require('mongodb');
 var smartsheetClient = require('smartsheet');
 var webex = require('webex/env');
-let mainCard = require('./cards/main.json');
+let mainCard = require('./cards/hannah.json');
 
 const mongoUri =`${process.env.MONGO_URI}/${process.env.MONGO_DB}?retryWrites=true&w=majority`
 const mongoClient = new MongoClient(mongoUri);
 const mongoDB = process.env.MONGO_DB;
-const typeCol = "type";
+const typeCol = "scenario";
 mongoClient.connect(err => {
   console.log('mongo connection established.')
  });
@@ -28,39 +28,109 @@ function botSetup(){
   });
 }
 
-function addSmartsheetRow(sheetInfo, inputs, personEmail){
-  var row = {
-      "toBottom": true,
-      "cells": []
-    }
+function placeCall(phone, voice_message){
+  // console.log(phone);
+  // console.log(voice_message);
+  // const {VoiceClient, VoiceMessage, TtsAudio, ClientConfiguration, GenderType, StyleType} = require('connect-sdk-node');
+  // const clientConfiguration = new ClientConfiguration("e3b2b918-808e-11ec-b58d-063d0d6fdfb5", "https://api-sandbox.imiconnect.io");
 
-  var options = {
-    sheetId: sheetInfo.sheet_id,
-    body: row
-  };
-  console.log(sheetInfo);
-  for(let key of Object.keys(sheetInfo.columns)){
-    console.log(key);
-    let value = inputs[key];
-    if(key == "status"){
-      value = "New";
-    } else if(key == "date_submitted"){
-      value = new Date().toISOString();
-    } else if(key == "submitted_by"){
-      value = personEmail;
-    }
-    let col = {"columnId":sheetInfo.columns[key], "value":value}
-    row.cells.push(col);
+  // const client = new VoiceClient(clientConfiguration);
+  // const message = new VoiceMessage("+12028973626", phone);
+  // const audio = new TtsAudio(voice_message);
+  //   audio.gender = GenderType.FEMALE;
+  //   audio.language = 'en-US';
+  //   audio.voice = 'AriaNeural';
+
+  // message.audio = audio;
+  // const request = client.sendVoiceMessage(message);
+  
+  // request
+  //   .then(res => {
+  //       console.log(res);
+  //   })
+  //   .catch(err => {
+  //       console.error(err);
+  //   });
+
+const got = require("got");
+imi_data = {"phone_number":phone,"message":voice_message};
+got('https://hooks-us.imiconnect.io/events/B45XP7TEWU', {json: imi_data, method:"POST"}).then(() => {
+  console.log('imi init flow launched with data:')
+}).catch((e)=> {
+  console.log('IMI Send error:')
+  console.log(e);
+});
+}
+
+//not about the code, I just want to know how we can test the webhook url if it is working or not. even using online tools. Do you know how we can do that?
+
+function sendLinkViaEmail(email,meetingLink,message,notes,channel_body,subject)
+{
+  var request = require('request');
+  msg = `Message: ${message} <br>`;
+  if(channel_body!='')
+  {
+  msg += `Notes: ${channel_body} <br>`;
   }
-  row = [row];
-  console.log(JSON.stringify(row));
-  ss.sheets.addRows(options)
-  .then(function(newRows) {
-    console.log(newRows);
-  })
-  .catch(function(error) {
-    console.log(error);
-  });
+  if(notes != '')
+  {
+    msg += `Additional Notes: ${notes}  <br>`;
+  }
+  msg += `Your meeting link: ${meetingLink} <br>`;
+  subject=subject+" "+getDateTime();
+
+  // msg = meetingLink +"\n";
+  // msg+="Message: "+message+"\n";
+  // if(channel_body!='')
+  // {
+  // msg+="Notes: "+channel_body+"\n";
+  // }
+  // if(notes !='')
+  // {
+  // msg+="Additional Notes: "+notes+"\n";
+  // }
+
+  request.post(
+      'https://wxsd.wbx.ninja/wxsd-guest-demo/email',
+      { json: { "to" :email, "message": msg, "subject":subject } },
+      function (error, response, body) {
+          if (!error && response.statusCode == 200) {
+              console.log("emailBody",body);
+          }
+      }
+  );
+//   const got = require("got");
+// imi_data = {"email":email,"message":message};
+// got('https://hooks-us.imiconnect.io/events/8RTNCYJRW3', {json: imi_data, method:"POST"}).then(() => {
+//   console.log('imi init flow launched with data:')
+// }).catch((e)=> {
+//   console.log('IMI Send error:')
+//   console.log(e);
+// });
+}
+
+function sendLinkViaSMS(phone,meetingLink,message,notes,channel_body)
+{
+  var request = require('request');
+
+  msg = `Message: ${message} \n`;
+  msg += `Notes: ${channel_body} \n`;
+  if(notes != '')
+  {
+    msg += `Additional Notes: ${notes}  \n`;
+  }
+  
+  msg += `Your meeting link: ${meetingLink}\n\n`;
+
+  request.post(
+      'https://wxsd.wbx.ninja/wxsd-guest-demo/sms',
+      { json: {"number":phone, "url":msg} },
+      function (error, response, body) {
+          if (!error && response.statusCode == 200) {
+              console.log(body);
+          }
+      }
+  );
 }
 
 function sendWebexMessage(roomId, message, card){
@@ -89,32 +159,28 @@ function createWebexMembership(payload){
 }
 
 function sendMainCard(roomId){
-  engagementTypes = [];
+  scenarioTypes = [];
   mongoClient.db(mongoDB).collection(typeCol).find().toArray(function(err, documents) {
-    console.log('got engagementTypes');
+    console.log('got scenarioTypes');
     for(let doc of documents){
-      engagementTypes.push({"title": doc.type, "value": doc.type});
+      scenarioTypes.push({"title": doc.scenario_type, "value": doc.scenario_type});
     }
-    mainCard.body[10].choices = engagementTypes;
-    mainCard.body[10].value = engagementTypes[0]["value"]; //preselect first item as value.  remove this line to default to --select-- placeholder in JSON card.
-    sendWebexMessage(roomId, "Engagement Request Form - Adaptive Card", mainCard);
+    mainCard.body[4].choices = scenarioTypes;
+    mainCard.body[4].value = scenarioTypes[0]["value"]; //preselect first item as value.  remove this line to default to --select-- placeholder in JSON card.
+    sendWebexMessage(roomId, "Major Incident Request - Adaptive Card", mainCard);
   });
 }
 
-function sendIntroSpaceMessage(roomId, actorId, inputs, links){
-  msg = `<@personId:${actorId}|> has requested assistance with:  \n`;
+function sendIntroSpaceMessage(roomId, actorId, inputs,   message,meetingLink){
+  msg = `<@personId:${actorId}|> has created:  \n`;
   //normally I should probably iterate over these keys but they look uglier that way and I like this specific order.
-  msg += `>**Engagement Type**: ${inputs.engagement_type}  \n`;
-  msg += `>**Customer Name**: ${inputs.customer_name}  \n`;
-  msg += `>**Geography**: ${inputs.geography}  \n`;
-  msg += `>**Sales Level 2**: ${inputs.sales_level_2}  \n`;
-  msg += `>**Sales Level 3**: ${inputs.sales_level_3}  \n`;
-  msg += `>**Additional Comments**: ${inputs.comments}\n\n`;
-  msg += 'An expert will follow up with you in this space as soon as possible. In the mean time, here are a few helpful links:  \n';
-  for(let link of links){
-    console.log(link);
-    msg += `[${link.name}](${link.url})  \n`;
+  msg += `>**Scenario**: ${inputs.scenario_type}  \n`;
+  msg += `>**Message**: ${message}\n\n`;
+  if(inputs.notes != '')
+  {
+    msg += `>**Notes**: ${inputs.notes}\n\n`;
   }
+  msg += `>**Meeting Link**: ${meetingLink}\n\n`;
   sendWebexMessage(roomId, msg);
 }
 
@@ -123,52 +189,105 @@ async function formSubmitted(actorId, inputs){
   console.log('formSubmitted');
   console.log(inputs);
   let cursor = await mongoClient.db(mongoDB).collection(typeCol).aggregate([
-                {$match : {type:inputs.engagement_type} },
-                {$lookup :
-                          {from :"links" ,
-                           localField : "links",
-                           foreignField:"_id" ,
-                           as :"links"}
-                },
-                {$lookup :
-                          {from :"sheets" ,
-                           localField : "sheet",
-                           foreignField:"_id" ,
-                           as :"sheet"}
-                }
+                {$match : {scenario_type:inputs.scenario_type} }
               ]);
   let doc;
+  var licensedLink;
   if (await cursor.hasNext()) {
     doc = await cursor.next();
     console.log('doc:');
     console.log(doc);
-    let roomPayload = {"title":`COE Engagement: ${inputs.customer_name} - ${doc.short_name}` };
+    title=inputs.scenario_type+" "+getDateTime();
+    let roomPayload = {"title":title };
     if([null, undefined, ""].indexOf(doc.team_id) < 0){
       roomPayload["teamId"] = doc.team_id;
     }
+    
     webex.rooms.create(roomPayload)
       .then(function(room){
-        console.log("Engagement Type:");
-        console.log(inputs.engagement_type);
-        for(let pers of doc.people){
-          console.log(pers);
-          createWebexMembership({"roomId":room.id, "personEmail":pers});
+        console.log("scenario Type:");
+        console.log(inputs.scenario_type);
+        for(let i=1;i<=Object.keys(doc.members).length;i++){
+          console.log(doc.members[i].display_name);
+          createWebexMembership({"roomId":room.id, "personEmail":doc.members[i].work_email});
         }
-        createWebexMembership({"roomId":room.id, "personId":actorId}).then((membership) => {
-          sendIntroSpaceMessage(room.id, actorId, inputs, doc.links);
-          if([null, undefined].indexOf(doc.sheet) < 0 && doc.sheet.length > 0){
-            addSmartsheetRow(doc.sheet[0], inputs, membership.personEmail);
-          }
-        });
+        
+        var request = require('request');
+
+        request.post(
+            'https://wxsd.wbx.ninja/wxsd-guest-demo/create_url',
+            { json: {"expire_hours":8, 
+            "sip_target":room.id,
+            "version":2
+            } },
+            function (error, response, body) {
+                if (!error && response.statusCode == 200) {
+                    console.log(body.urls.Licensed[0]);
+                    licensedLink= body.urls.Licensed[0];
+                    let date_time=getDateTime();
+                    default_space_message=doc.default_space_message;
+                    notifyLink(doc, licensedLink,inputs,default_space_message);
+                    createWebexMembership({"roomId":room.id, "personId":actorId}).then((membership) => {
+                      sendIntroSpaceMessage(room.id, actorId, inputs, default_space_message,licensedLink);
+                    });
+                }
+            }
+        );
+        
+        
       }).catch(function(error){
         let msg = `formSubmitted Error: failed to create room: ${error}`;
         console.log(msg);
         sendWebexMessage(process.env.ERROR_ROOM_ID, msg);
       });
+     
   } else {
     let msg = "formSubmitted Error: mongo aggregate couldn't find an item for that type"
     console.log(msg);
     sendWebexMessage(process.env.ERROR_ROOM_ID, msg);
+  }
+}
+
+function getDateTime()
+{
+  let date_ob = new Date();
+  let date = ("0" + date_ob.getDate()).slice(-2);
+  let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
+  let year = date_ob.getFullYear();
+  let hours = date_ob.getHours();
+  let minutes = date_ob.getMinutes();
+  let seconds = date_ob.getSeconds();
+  let date_time=month+"/"+date+"/"+year+" "+hours+":"+minutes+":"+seconds;
+  return date_time;
+}
+
+function notifyLink(doc,meetingLink,inputs,default_space_message)
+{
+  for(let i=1;i<=Object.keys(doc.notification_channel).length;i++)
+  {
+    console.log("LicensedLink",meetingLink);
+    if(doc.notification_channel[i].channel_type == "sms")
+    {
+      sms_message=doc.notification_channel[i].channel_body;
+      for(let i=1;i<=Object.keys(doc.members).length;i++){
+        sendLinkViaSMS(doc.members[i].work_number,meetingLink,default_space_message,inputs.notes,sms_message);
+      }
+    }
+    if(doc.notification_channel[i].channel_type == "call")
+    {
+      voice_message=doc.notification_channel[i].channel_body;
+      for(let i=1;i<=Object.keys(doc.members).length;i++){
+        placeCall(doc.members[i].work_number,voice_message);
+      }
+    }
+    if(doc.notification_channel[i].channel_type == "email")
+    {
+      email_message=doc.notification_channel[i].channel_body;
+      email_subject=doc.notification_channel[i].channel_subject;
+      for(let i=1;i<=Object.keys(doc.members).length;i++){
+        sendLinkViaEmail(doc.members[i].work_email,meetingLink,default_space_message,inputs.notes,email_message,email_subject);
+      }
+    }
   }
 }
 
@@ -184,11 +303,11 @@ function eventListener(){
           console.log(message);
           let roomId = message.data.roomId;
           let personEmail = message.data.personEmail;
-          if(!personEmail.endsWith('@cisco.com')){
-            sendWebexMessage(roomId, CISCO_ONLY);
-          } else {
+          // if(!personEmail.endsWith('@cisco.com')){
+          //   sendWebexMessage(roomId, CISCO_ONLY);
+          // } else {
             sendMainCard(roomId);
-          }
+          //}
         }//else, we do nothing when we see the bot's own message
       });
     })
@@ -207,16 +326,13 @@ function eventListener(){
         let inputs = attachmentAction.data.inputs;
         webex.people.get(attachmentAction.actorId).then((person) => {
           console.log(person);
-          let personEmail = person.emails[0];
-          if(!personEmail.endsWith('@cisco.com')){
-            sendWebexMessage(roomId, CISCO_ONLY);
-          } else if(inputs.submit == 'main'){
-            if(inputs.customer_name != ''){
+          if(inputs.submit == 'main'){
+            if(inputs.scenario_type != ''){
               formSubmitted(attachmentAction.actorId, inputs);
               webex.messages.remove(messageId);
               sendWebexMessage(roomId, "Thank you for your submission. A new space to discuss your request is being created now.");
             } else {
-              sendWebexMessage(roomId, "Please enter a customer name and resubmit to continue.");
+              sendWebexMessage(roomId, "Please select a scenario and resubmit to continue.");
             }
           } else if(inputs.submit == 'intro'){
             webex.messages.remove(messageId);

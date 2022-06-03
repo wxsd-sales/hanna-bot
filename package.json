@@ -1,17 +1,20 @@
 {
   "name": "engagementbot",
   "version": "1.0.0",
-  "description": "Center of Excellent New Engagement Bot",
+  "description": "Hannah Bot",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Taylor Hanson",
-  "license": "ISC",
   "dependencies": {
+    "connect-sdk-node": "^1.0.0",
+    "crypto": "^1.0.1",
     "dotenv": "^8.2.0",
+    "got": "^11.8.5",
     "mongodb": "^4.1.2",
+    "node-fetch": "^2.6.7",
     "smartsheet": "^2.126.0",
+    "uuid": "^8.3.2",
     "webex": "^1.141.0"
   }
 }

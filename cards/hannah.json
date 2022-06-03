@@ -1,0 +1,89 @@
+{
+    "type": "AdaptiveCard",
+    "body": [
+        {
+            "type": "ColumnSet",
+            "columns": [
+                {
+                    "type": "Column",
+                    "items": [
+                        {
+                            "type": "Image",
+                            "size": "Small",
+                            "url": "https://avatars.githubusercontent.com/u/79668990?s=400&u=7a159fa30994319d5ad84189de6cdcb05311094d&v=4"
+                        }
+                    ],
+                    "width": "auto"
+                },
+                {
+                    "type": "Column",
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "weight": "Bolder",
+                            "wrap": true,
+                            "text": "Hanna"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "spacing": "None",
+                            "text": "War Room Assistant Bot",
+                            "isSubtle": true,
+                            "wrap": true
+                        }
+                    ],
+                    "width": "stretch"
+                }
+            ]
+        },
+        {
+            "type": "TextBlock",
+            "text": "Hi! I'm Hanna, a war room assistant bot designed to help you with incident response workflows! Please enter an Incident ID in the field below and select the teams you'd like me to rally! I'll create a separate space with the team as soon as you hit the Go! button below.\n",
+            "wrap": true
+        },
+        {
+            "type": "Container",
+            "minHeight": "0px",
+            "separator": true
+        },
+        {
+            "type": "TextBlock",
+            "text": "Select Scenario:",
+            "wrap": true
+        },
+        {
+            "type": "Input.ChoiceSet",
+            "placeholder": "--select--",
+            "spacing": "None",
+            "id": "scenario_type"
+        },
+        {
+            "type": "TextBlock",
+            "text": "Notes:",
+            "wrap": true
+        },
+        {
+            "type": "Input.Text",
+            "placeholder": "Please enter any additional message you'd like me to post in the space that I create with the relevant members.",
+            "isMultiline": true,
+            "spacing": "None",
+            "id": "notes"
+        },
+        {
+            "type": "ActionSet",
+            "actions": [
+                {
+                    "type": "Action.Submit",
+                    "title": "Go!",
+                    "id": "submit",
+                    "data": {
+                        "submit": "main"
+                    }
+                }
+            ],
+            "horizontalAlignment": "Center"
+        }
+    ],
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "version": "1.2"
+}

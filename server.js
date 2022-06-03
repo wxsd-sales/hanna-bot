@@ -29,40 +29,16 @@ function botSetup(){
 }
 
 function placeCall(phone, voice_message){
-  // console.log(phone);
-  // console.log(voice_message);
-  // const {VoiceClient, VoiceMessage, TtsAudio, ClientConfiguration, GenderType, StyleType} = require('connect-sdk-node');
-  // const clientConfiguration = new ClientConfiguration("e3b2b918-808e-11ec-b58d-063d0d6fdfb5", "https://api-sandbox.imiconnect.io");
 
-  // const client = new VoiceClient(clientConfiguration);
-  // const message = new VoiceMessage("+12028973626", phone);
-  // const audio = new TtsAudio(voice_message);
-  //   audio.gender = GenderType.FEMALE;
-  //   audio.language = 'en-US';
-  //   audio.voice = 'AriaNeural';
-
-  // message.audio = audio;
-  // const request = client.sendVoiceMessage(message);
-  
-  // request
-  //   .then(res => {
-  //       console.log(res);
-  //   })
-  //   .catch(err => {
-  //       console.error(err);
-  //   });
-
-const got = require("got");
-imi_data = {"phone_number":phone,"message":voice_message};
-got('https://hooks-us.imiconnect.io/events/B45XP7TEWU', {json: imi_data, method:"POST"}).then(() => {
-  console.log('imi init flow launched with data:')
-}).catch((e)=> {
-  console.log('IMI Send error:')
-  console.log(e);
-});
+  const got = require("got");
+  imi_data = {"phone_number":phone,"message":voice_message};
+  got(process.env.IMI_PHONE_URL, {json: imi_data, method:"POST"}).then(() => {
+    console.log('imi init flow launched with data:')
+  }).catch((e)=> {
+    console.log('IMI Send error:')
+    console.log(e);
+  });
 }
-
-//not about the code, I just want to know how we can test the webhook url if it is working or not. even using online tools. Do you know how we can do that?
 
 function sendLinkViaEmail(email,meetingLink,message,notes,channel_body,subject)
 {
@@ -79,17 +55,6 @@ function sendLinkViaEmail(email,meetingLink,message,notes,channel_body,subject)
   msg += `Your meeting link: ${meetingLink} <br>`;
   subject=subject+" "+getDateTime();
 
-  // msg = meetingLink +"\n";
-  // msg+="Message: "+message+"\n";
-  // if(channel_body!='')
-  // {
-  // msg+="Notes: "+channel_body+"\n";
-  // }
-  // if(notes !='')
-  // {
-  // msg+="Additional Notes: "+notes+"\n";
-  // }
-
   request.post(
       'https://wxsd.wbx.ninja/wxsd-guest-demo/email',
       { json: { "to" :email, "message": msg, "subject":subject } },
@@ -99,14 +64,6 @@ function sendLinkViaEmail(email,meetingLink,message,notes,channel_body,subject)
           }
       }
   );
-//   const got = require("got");
-// imi_data = {"email":email,"message":message};
-// got('https://hooks-us.imiconnect.io/events/8RTNCYJRW3', {json: imi_data, method:"POST"}).then(() => {
-//   console.log('imi init flow launched with data:')
-// }).catch((e)=> {
-//   console.log('IMI Send error:')
-//   console.log(e);
-// });
 }
 
 function sendLinkViaSMS(phone,meetingLink,message,notes,channel_body)
@@ -114,7 +71,10 @@ function sendLinkViaSMS(phone,meetingLink,message,notes,channel_body)
   var request = require('request');
 
   msg = `Message: ${message} \n`;
+  if(channel_body!='')
+  {
   msg += `Notes: ${channel_body} \n`;
+  }
   if(notes != '')
   {
     msg += `Additional Notes: ${notes}  \n`;
@@ -173,7 +133,6 @@ function sendMainCard(roomId){
 
 function sendIntroSpaceMessage(roomId, actorId, inputs,   message,meetingLink){
   msg = `<@personId:${actorId}|> has created:  \n`;
-  //normally I should probably iterate over these keys but they look uglier that way and I like this specific order.
   msg += `>**Scenario**: ${inputs.scenario_type}  \n`;
   msg += `>**Message**: ${message}\n\n`;
   if(inputs.notes != '')
@@ -208,7 +167,6 @@ async function formSubmitted(actorId, inputs){
         console.log("scenario Type:");
         console.log(inputs.scenario_type);
         for(let i=1;i<=Object.keys(doc.members).length;i++){
-          console.log(doc.members[i].display_name);
           createWebexMembership({"roomId":room.id, "personEmail":doc.members[i].work_email});
         }
         
@@ -224,7 +182,6 @@ async function formSubmitted(actorId, inputs){
                 if (!error && response.statusCode == 200) {
                     console.log(body.urls.Licensed[0]);
                     licensedLink= body.urls.Licensed[0];
-                    let date_time=getDateTime();
                     default_space_message=doc.default_space_message;
                     notifyLink(doc, licensedLink,inputs,default_space_message);
                     createWebexMembership({"roomId":room.id, "personId":actorId}).then((membership) => {
@@ -291,7 +248,6 @@ function notifyLink(doc,meetingLink,inputs,default_space_message)
   }
 }
 
-var CISCO_ONLY = "Thank you for reaching out. This bot can only be used by cisco.com accounts. Please work with your Cisco account team to engage the Center of Excellence team as needed.";
 function eventListener(){
   console.log('connected');
   webex.messages.listen()
@@ -302,13 +258,8 @@ function eventListener(){
           console.log('message created event:');
           console.log(message);
           let roomId = message.data.roomId;
-          let personEmail = message.data.personEmail;
-          // if(!personEmail.endsWith('@cisco.com')){
-          //   sendWebexMessage(roomId, CISCO_ONLY);
-          // } else {
             sendMainCard(roomId);
-          //}
-        }//else, we do nothing when we see the bot's own message
+        }
       });
     })
     .catch((err) => {

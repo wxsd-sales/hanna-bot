@@ -48,6 +48,16 @@
         },
         {
             "type": "TextBlock",
+            "text": "Incident ID:",
+            "wrap": true
+        },
+        {
+            "type": "Input.Text",
+            "id": "incident_id",
+            "spacing": "None"
+        },
+        {
+            "type": "TextBlock",
             "text": "Select Scenario:",
             "wrap": true
         },

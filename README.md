@@ -8,10 +8,10 @@ You will need to create a file called **.env** that includes the following lines
 PORT=
 WEBEX_LOG_LEVEL=debug
 WEBEX_ACCESS_TOKEN=
-MONGO_URI="mongodb+srv://hannahbot:wtjpcTcfX77YASZ@democluster.a5pbd.mongodb.net"
-MONGO_DB=hannah
+MONGO_URI=
+MONGO_DB=
 ERROR_ROOM_ID=
-IMI_PHONE_URL=https://hooks-us.imiconnect.io/events/B45XP7TEWU
+IMI_PHONE_URL=
 
 ```
 Note:

@@ -18,8 +18,8 @@ Note:
 1. You will need to provide a port for this to run locally
 2. You will need to provide an access_token of a test bot for testing
 3. You will need to provide a roomId for error messages to be sent. This can be any Webex Space roomId that your bot is a member of.
-4. Please use the Mongo credentials shown above in the .env file
-5. Please feel free to add or delete members object in the DB to add or remove members.
+4. Please add your Mongo credentials in the .env file
+5. IMI_PHONE_URL is the webhook URL of the phone call flow in Webex connect platform.
 
 ### Install
 The typical npm install flow, after cloning this repo

@@ -2,6 +2,7 @@ require("dotenv").config();
 const { MongoClient } = require("mongodb");
 var webex = require("webex/env");
 let mainCard = require("./cards/hannah.json");
+const axios = require("axios");
 
 const mongoUri = `${process.env.MONGO_URI}/${process.env.MONGO_DB}?retryWrites=true&w=majority`;
 const mongoClient = new MongoClient(mongoUri);
@@ -28,11 +29,12 @@ function botSetup() {
 }
 
 function placeCall(phone, voice_message) {
-  const got = require("got");
-  imi_data = { phone_number: phone, message: voice_message };
-  got(process.env.IMI_PHONE_URL, { json: imi_data, method: "POST" })
-    .then(() => {
-      console.log("imi init flow launched with data:");
+  let imi_data = { phone_number: phone, message: voice_message };
+
+  axios
+    .post(process.env.IMI_PHONE_URL, imi_data)
+    .then((response) => {
+      console.log("imi init flow launched with data:", response.data);
     })
     .catch((e) => {
       console.log("IMI Send error:");
@@ -49,8 +51,7 @@ function sendLinkViaEmail(
   subject,
   incident_id
 ) {
-  var request = require("request");
-  msg = `Message: ${message} <br>`;
+  let msg = `Message: ${message} <br>`;
   if (incident_id != "") {
     msg += `Incident ID: ${incident_id} <br>`;
   }
@@ -63,15 +64,17 @@ function sendLinkViaEmail(
   msg += `Your meeting link: ${meetingLink} <br>`;
   subject = subject + " " + getDateTime();
 
-  request.post(
-    "https://wxsd.wbx.ninja/wxsd-guest-demo/email",
-    { json: { to: email, message: msg, subject: subject } },
-    function (error, response, body) {
-      if (!error && response.statusCode == 200) {
-        console.log("emailBody", body);
-      }
-    }
-  );
+  const body = { to: email, message: msg, subject: subject };
+
+  axios
+    .post(process.env.EMAIL_URL, body)
+    .then((response) => {
+      console.log("Email sent succesfully:", response.data);
+    })
+    .catch((e) => {
+      console.log("EMAIL Send error:");
+      console.log(e);
+    });
 }
 
 function sendLinkViaSMS(
@@ -82,9 +85,7 @@ function sendLinkViaSMS(
   channel_body,
   incident_id
 ) {
-  var request = require("request");
-
-  msg = `Message: ${message} \n`;
+  let msg = `Message: ${message} \n`;
   if (incident_id != "") {
     msg += `Incident ID: ${incident_id} \n`;
   }
@@ -97,15 +98,17 @@ function sendLinkViaSMS(
 
   msg += `Your meeting link: ${meetingLink}\n\n`;
 
-  request.post(
-    "https://wxsd.wbx.ninja/wxsd-guest-demo/sms",
-    { json: { number: phone, url: msg } },
-    function (error, response, body) {
-      if (!error && response.statusCode == 200) {
-        console.log(body);
-      }
-    }
-  );
+  const body = { number: phone, url: msg };
+
+  axios
+    .post(process.env.SMS_URL, body)
+    .then((response) => {
+      console.log("SMS sent succesfully:", response.data);
+    })
+    .catch((e) => {
+      console.log("SMS Send error:");
+      console.log(e);
+    });
 }
 
 function sendWebexMessage(roomId, message, card) {
@@ -206,32 +209,35 @@ async function formSubmitted(actorId, inputs) {
           });
         }
 
-        var request = require("request");
+        const body = { expire_hours: 8, sip_target: room.id, version: 2 };
 
-        request.post(
-          "https://wxsd.wbx.ninja/wxsd-guest-demo/create_url",
-          { json: { expire_hours: 8, sip_target: room.id, version: 2 } },
-          function (error, response, body) {
-            if (!error && response.statusCode == 200) {
-              console.log(body.urls.Licensed[0]);
-              licensedLink = body.urls.Licensed[0];
-              default_space_message = doc.default_space_message;
-              notifyLink(doc, licensedLink, inputs, default_space_message);
-              createWebexMembership({
-                roomId: room.id,
-                personId: actorId,
-              }).then((membership) => {
-                sendIntroSpaceMessage(
-                  room.id,
-                  actorId,
-                  inputs,
-                  default_space_message,
-                  licensedLink
-                );
-              });
-            }
-          }
-        );
+        axios
+          .post(process.env.CREATE_URL, body)
+          .then((response) => {
+            const { data } = response;
+            console.log("URL created succesfully:", data);
+
+            console.log(data.urls.Licensed[0]);
+            licensedLink = data.urls.Licensed[0];
+            default_space_message = doc.default_space_message;
+            notifyLink(doc, licensedLink, inputs, default_space_message);
+            createWebexMembership({
+              roomId: room.id,
+              personId: actorId,
+            }).then(() => {
+              sendIntroSpaceMessage(
+                room.id,
+                actorId,
+                inputs,
+                default_space_message,
+                licensedLink
+              );
+            });
+          })
+          .catch((e) => {
+            console.log("URL creation error:");
+            console.log(e);
+          });
       })
       .catch(function (error) {
         let msg = `formSubmitted Error: failed to create room: ${error}`;

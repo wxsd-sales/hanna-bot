@@ -5,7 +5,7 @@ Hanna Bot is a war room assistant bot designed to help with incident response wo
 ### Setup
 You will need to create a file called **.env** that includes the following lines:
 ```
-PORT=8000
+PORT=
 WEBEX_LOG_LEVEL=debug
 WEBEX_ACCESS_TOKEN=
 MONGO_URI=
